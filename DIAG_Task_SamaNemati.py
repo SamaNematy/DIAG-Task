@@ -7,8 +7,6 @@ Original file is located at
     https://colab.research.google.com/drive/1OeEzrM_vSbQpCQtjPmKl_bDBIATw7YUx
 """
 
-from google.colab import drive
-drive.mount('/content/drive')
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -24,7 +22,14 @@ image = cv2.imread('office_noisy.png', cv2.IMREAD_GRAYSCALE)
 
 # Function to apply Gaussian smoothing
 def gaussian_smoothing(image, sigma):
-    return cv2.GaussianBlur(image, (0, 0), sigma)
+    # Apply Gaussian blur with automatic kernel size
+    result = cv2.GaussianBlur(image, (0, 0), sigma)
+    
+    # Calculate the kernel size based on sigma
+    ksize = 2 * int(3 * sigma) + 1
+    print(f"Sigma: {sigma}, Kernel Size: {ksize}x{ksize}")
+    
+    return result
 
 # List of sigma values
 sigma_values = [0.5, 1, 2, 5, 10, 50]
@@ -43,6 +48,34 @@ for i, (sigma, smoothed) in enumerate(zip(sigma_values, smoothed_images)):
     plt.axis('off')
     plt.tight_layout()
     plt.show()
+
+
+# Define the large sigma and small kernel size
+kernel_size = 3
+sigma_1 = (kernel_size - 1) / 6  # Most effective sigma value based on kernel size
+sigmas = [sigma_1, 10 * sigma_1, 100 * sigma_1, 100000 * sigma_1, 10]
+
+# Apply Gaussian blurring and store results
+blurred_images = [cv2.GaussianBlur(image, (kernel_size, kernel_size), sigma) for sigma in sigmas]
+
+# Plot original and blurred images
+plt.figure(figsize=(15, 5))  # Adjust the figure size if needed
+
+# Show original image
+plt.subplot(1, 6, 1)
+plt.title('Original Image', fontsize=9)
+plt.imshow(image, cmap='gray')
+plt.axis('off')
+
+# Show blurred images
+for i, (blurred_image, sigma) in enumerate(zip(blurred_images, sigmas)):
+    plt.subplot(1, 6, i + 2)
+    plt.title(f'Kernel Size: {kernel_size}x{kernel_size}, Sigma: {sigma:.2f}', fontsize=9)
+    plt.imshow(blurred_image, cmap='gray')
+    plt.axis('off')
+
+plt.show()
+
 
 def linear_diffusion(image, d, time_step, num_iterations):
     img = image.astype(np.float32)
